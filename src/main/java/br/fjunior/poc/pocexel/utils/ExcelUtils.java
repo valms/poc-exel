@@ -14,12 +14,12 @@ import org.apache.poi.xddf.usermodel.chart.AxisPosition;
 import org.apache.poi.xddf.usermodel.chart.ChartTypes;
 import org.apache.poi.xddf.usermodel.chart.LegendPosition;
 import org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis;
-import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartLegend;
 import org.apache.poi.xddf.usermodel.chart.XDDFDataSource;
 import org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory;
 import org.apache.poi.xddf.usermodel.chart.XDDFLineChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource;
+import org.apache.poi.xddf.usermodel.chart.XDDFScatterChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
@@ -57,7 +57,7 @@ public class ExcelUtils {
             CellStyle cellCenterStyle = this.createCenterCellStyle(xssfWorkbook);
             CellStyle cellJustifyStyle = this.createJustifyCellStyle(xssfWorkbook);
 
-            List<String> headers = Arrays.asList("A very long par   am1 name", "Param2", "Param3", "Param4", "Param5");
+            List<String> headers = Arrays.asList("A very long param name", "Param2", "Param3", "Param4", "Param5");
             List<String> months = Arrays.asList(new DateFormatSymbols().getMonths());
 
             this.createRowHeader(lineChartSheetTab, cellCenterStyle, headers);
@@ -105,27 +105,8 @@ public class ExcelUtils {
         leftAxis.setCrosses(AxisCrosses.AUTO_ZERO);
 
         this.plotLineChart(sheet, shapesChart, bottomAxis, leftAxis, numCol);
+//        this.plotScatterChart(sheet, shapesChart, bottomAxis, leftAxis, numCol);
     }
-
-    private void plotLineChart(XSSFSheet sheet, XSSFChart shapesChart, XDDFCategoryAxis bottomAxis,
-                               XDDFValueAxis leftAxis, int numCol) {
-
-        XDDFLineChartData xddfLineChartData = (XDDFLineChartData) shapesChart.createData(ChartTypes.LINE, bottomAxis, leftAxis);
-
-        XDDFDataSource<String> months = XDDFDataSourcesFactory.fromStringCellRange(sheet, new CellRangeAddress(1, 12, 0, 0));
-
-        for (int i = 1; i < numCol; i++) {
-            XDDFNumericalDataSource<Double> params = XDDFDataSourcesFactory.fromNumericCellRange(sheet, new CellRangeAddress(1, 12, i, i));
-            XDDFChartData.Series addSeries = xddfLineChartData.addSeries(months, params);
-            CellReference titleSeries = new CellReference(sheet.getSheetName(), 0, i, false, false);
-            addSeries.setTitle(null, titleSeries);
-        }
-
-        xddfLineChartData.setVaryColors(false);
-
-        shapesChart.plot(xddfLineChartData);
-    }
-
 
     private Integer populateRows() {
         return new Random().nextInt(100000);
@@ -188,6 +169,43 @@ public class ExcelUtils {
 
             }
         }
+    }
+
+    private void plotLineChart(XSSFSheet sheet, XSSFChart shapesChart, XDDFCategoryAxis bottomAxis,
+                               XDDFValueAxis leftAxis, int numCol) {
+
+        XDDFLineChartData xddfLineChartData = (XDDFLineChartData) shapesChart.createData(ChartTypes.LINE, bottomAxis, leftAxis);
+        xddfLineChartData.setVaryColors(false);
+
+        XDDFDataSource<String> months = XDDFDataSourcesFactory.fromStringCellRange(sheet, new CellRangeAddress(1, 12, 0, 0));
+
+        for (int i = 1; i < numCol; i++) {
+            XDDFNumericalDataSource<Double> params = XDDFDataSourcesFactory.fromNumericCellRange(sheet, new CellRangeAddress(1, 12, i, i));
+            XDDFLineChartData.Series addSeries = (XDDFLineChartData.Series) xddfLineChartData.addSeries(months, params);
+            CellReference titleSeries = new CellReference(sheet.getSheetName(), 0, i, false, false);
+            addSeries.setTitle(null, titleSeries);
+            addSeries.setSmooth(false);
+        }
+
+        shapesChart.plot(xddfLineChartData);
+    }
+
+    private void plotScatterChart(XSSFSheet sheet, XSSFChart shapesChart, XDDFCategoryAxis bottomAxis,
+                                XDDFValueAxis leftAxis, int numCol) {
+        XDDFScatterChartData xddfScatterChartData = (XDDFScatterChartData) shapesChart.createData(ChartTypes.SCATTER, bottomAxis, leftAxis);
+        xddfScatterChartData.setVaryColors(false);
+
+        XDDFDataSource<String> months = XDDFDataSourcesFactory.fromStringCellRange(sheet, new CellRangeAddress(1, 12, 0, 0));
+
+        for (int i = 1; i < numCol; i++) {
+            XDDFNumericalDataSource<Double> params = XDDFDataSourcesFactory.fromNumericCellRange(sheet, new CellRangeAddress(1, 12, i, i));
+            XDDFScatterChartData.Series addSeries = (XDDFScatterChartData.Series) xddfScatterChartData.addSeries(months, params);
+            CellReference titleSeries = new CellReference(sheet.getSheetName(), 0, i, false, false);
+            addSeries.setTitle("null", null);
+            addSeries.setSmooth(false);
+        }
+
+        shapesChart.plot(xddfScatterChartData);
     }
 
 }
